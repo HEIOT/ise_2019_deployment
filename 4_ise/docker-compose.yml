@@ -1,0 +1,158 @@
+version: "3.4"
+
+services:
+    pgadmin:
+        image: dpage/pgadmin4
+        env_file:
+            - ./${VERSION}.env
+        restart: always
+        volumes:
+            - pgadmin:/var/lib/pgadmin
+
+    backend_api:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+        env_file:
+            - ./${VERSION}.env
+        environment:
+            SERVICEDIR: services
+            SERVICES: api
+            SECONDARY: "false"
+        expose:
+            - "3000"
+        depends_on:
+            - redis
+            - postgresql
+        restart: always
+
+    backend_device:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+        env_file:
+            - ./${VERSION}.env
+        environment:
+            SERVICEDIR: services
+            SERVICES: nats-connect
+            SECONDARY: "true"
+        expose:
+            - "3000"
+        depends_on:
+            - redis
+            - postgresql
+            - backend_api
+        restart: always
+
+    backend_devicemanagement:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+        env_file:
+            - ./${VERSION}.env
+        environment:
+            SERVICEDIR: services
+            SERVICES: device-management
+            SECONDARY: "true"
+        expose:
+            - "3000"
+        depends_on:
+            - redis
+            - postgresql
+            - backend_api
+        restart: always
+
+    backend_datastore:
+            image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+            env_file:
+                - ./${VERSION}.env
+            environment:
+                SERVICEDIR: services
+                SERVICES: datastore
+                SECONDARY: "true"
+            expose:
+                - "3000"
+            depends_on:
+                - redis
+                - postgresql
+                - backend_api
+            restart: always
+
+    backend_publisher:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+        env_file:
+            - ./${VERSION}.env
+        environment:
+            SERVICEDIR: services
+            SERVICES: publisher
+            SECONDARY: "true"
+        expose:
+            - "3000"
+        depends_on:
+            - redis
+            - postgresql
+            - backend_api
+        restart: always
+
+    backend_analytics:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+        env_file:
+            - ./${VERSION}.env
+        environment:
+            SERVICEDIR: services
+            SERVICES: analytics
+            SECONDARY: "true"
+        expose:
+            - "3000"
+        depends_on:
+            - redis
+            - postgresql
+            - backend_api
+        restart: always
+
+    backend_prometheus:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_backend_${VERSION}:latest
+        env_file:
+            - ./${VERSION}.env
+        environment:
+            SERVICEDIR: services
+            SERVICES: metrics.prometheus
+            SECONDARY: "true"
+        expose:
+            - "3000"
+            - "3030"
+        depends_on:
+            - redis
+            - postgresql
+            - backend_api
+        restart: always
+
+    redis:
+        image: redis:alpine
+        restart: always
+
+    postgresql:
+        image: postgres:12-alpine
+
+        environment:
+            POSTGRES_PASSWORD: Testpassword
+            POSTGRES_USER: Testuser
+        volumes:
+            - dbdata:/var/lib/postgresql/data
+        restart: always
+
+    frontend:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_frontend_${VERSION}:latest
+        expose:
+            - "80"
+        env_file:
+            - ./${VERSION}.env
+        restart: always
+
+    crawler:
+        image: heieducation.ifi.uni-heidelberg.de:5000/ise_2019_crawler:latest
+        restart: always
+
+volumes:
+    dbdata:
+    pgadmin:
+
+networks:
+    default:
+        external:
+          name: proxy_ise_network_${VERSION}
+

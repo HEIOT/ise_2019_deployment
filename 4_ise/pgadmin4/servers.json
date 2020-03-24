@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "ISE 2019 Server",
+            "Group": "Server",
+            "Port": 5432,
+            "Username": "Testuser",
+            "Host": "postgresql",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres"
+        }
+    }
+}

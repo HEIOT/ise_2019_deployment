@@ -1,0 +1,81 @@
+version: "3.4"
+
+services:
+  proxy_frontend:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    image: heieducation.ifi.uni-heidelberg.de:5000/ise_nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /home/isekiel/certbot/conf:/etc/letsencrypt
+      - /home/isekiel/certbot/www:/var/www/certbot
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - staging
+      - release
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - proxy_frontend
+    volumes:
+      - /home/isekiel/certbot/conf:/etc/letsencrypt
+      - /home/isekiel/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - staging
+      - release
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+        - ./prometheus/:/etc/prometheus/
+        - prometheus_data:/prometheus
+    links:
+        - cadvisor:cadvisor
+    depends_on:
+        - cadvisor
+    command:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --web.console.libraries=/usr/share/prometheus/console_libraries
+        - --web.console.templates=/usr/share/prometheus/consoles
+        - --web.external-url=https://heieducation.ifi.uni-heidelberg.de/prometheus
+
+    expose:
+        - "9090"
+    restart: always
+    networks:
+      - staging
+      - release
+
+  cadvisor:
+    image: google/cadvisor
+    privileged: true
+    volumes:
+        - /:/rootfs:ro
+        - /var/run:/var/run:rw
+        - /sys:/sys:ro
+        - /var/lib/docker/:/var/lib/docker:ro
+    expose:
+        - "8080"
+    restart: always
+    networks:
+      - staging
+      - release
+
+volumes:
+  prometheus_data:
+
+networks:
+  staging:
+    external:
+      name: proxy_ise_network_staging
+  release:
+    external:
+      name: proxy_ise_network_release
