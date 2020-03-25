@@ -10,7 +10,7 @@ services:
     environment:
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
     volumes:
-      - /home/bockstaller/container_data:/data
+      - ./container_data:/data
     restart: always
     logging:
       driver: "json-file"

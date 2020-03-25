@@ -1,4 +1,12 @@
-# Deploying the ISE project
+# HEIOT
+HEIOT is an IoT platform to manage IoT devices and their delivered data.
+The user can overlook all devices in lists grouped by the actual condition distinguishing between the need of the platform's manager to take further actions. The user is enabled to create tags and masterdata by her-/himself in order to group the devices semantically.
+Moreover, there is a detailed view of each device where all data is displayed and visualized by interactive charts and tables.
+The platform also includes an analytical service to detect anomalies in the device's data.
+
+HEIOT was a project ("ISE project") implemented by a group of students from the University of Heidelberg.
+
+## Deploying the ISE project
 
 The deployment of the ISE project is grouped in four distinct steps:
 
@@ -12,18 +20,18 @@ Each step has it's own appropriatly named folder.
 Launching the docker registry and the ise application in two distinct steps limits the fault domain of a failed ise deployment to only ise services.
 This is crucial to prevent a deadlock situation where we need a docker registry to publish a corrected image too, to prevent a web server from crashing which hosts the registry. It would be preferable to host this service on a different server completely.
 
-## Prerequisites
+### Prerequisites
 
 - Install docker-compose
 - DNS is configured and a domain is pointing on this publicly reachable server.
 
-## Bootstrapping
+### Bootstrapping
 
 The Bootstrapping process is necessary to launch a fully featured docker registry.
 Clients expect a TLS encripted connection or would need special setup to suppress warnings.
 We use the lets encrypt service to get our publicly signed certificates.
 
-### Folder structure
+#### Folder structure
 
 - **docker-compose.yml**:
   This file describes two services as a docker-compose file.
@@ -38,7 +46,7 @@ We use the lets encrypt service to get our publicly signed certificates.
 - **init-letsencrypt.sh**:
   A script to sequence all actions to aquire the certificate.
 
-### Usage
+#### Usage
 
 Execute these steps on the server, which will be responsible for ingesting traffic and terminating the TLS-connections.
 
@@ -57,7 +65,7 @@ Execute these steps on the server, which will be responsible for ingesting traff
 
 ---
 
-### Script explanation
+#### Script explanation
 
 1. Download the best practice tls certificate configuration parameters.
 2. Create a dummy certificate. This is necessary to start nginx, which won't start without a valid certificate file (it mustn't be signed by a certificate authority).
@@ -70,14 +78,14 @@ Execute these steps on the server, which will be responsible for ingesting traff
 
 ---
 
-## Registry
+### Registry
 
 Deploying the registry, provides the user with a private docker registry and an UI to manage.
 It is accessible on *heieducation.ifi.uni-heidelberg.de:5000*.
 The access is limited by basic authentication.
 A user or docker-daemon have to login before they can publish or pull images.
 
-### Folder structure
+#### Folder structure
 
 - **docker-compose.proxy.yml**:
   This docker-compose file describes the nginx instance which handles the docker registry
@@ -89,7 +97,7 @@ A user or docker-daemon have to login before they can publish or pull images.
   nginx.Dockerfile describes the build instructions to create the nginx instance described in docker-compose.proxy.yml.
   It loads nginx.conf, the nginx configuration, and the folder htpasswd, which contains the password hashes for access control.
 
-### Usage
+#### Usage
 
 1. Build the nginx docker image.
 
@@ -105,13 +113,13 @@ A user or docker-daemon have to login before they can publish or pull images.
 
 3. Verify funtionality by opening *heieducation.ifi.uni-heidelberg.de:5000* and pushing and pulling a image to the registry.
 
-## Proxy
+### Proxy
 
 This folder contains the `nginx` reverse proxy which handels the staging and production environment. This includes a
 We deploy `cadvisor`, for gathering container metrics, and and `prometheus`, for storing container metrics, as well.
 This allows us to gather metrics even during deployments.
 
-### Folder structure
+#### Folder structure
 
 - **htpasswd/**
   The password hashes used for authorization.
@@ -125,7 +133,7 @@ This allows us to gather metrics even during deployments.
 - **docker-compose.yml**
   `docker-compose` configuration which creates the reverse proxy, the `lets-encrypt-certificate-renewal-daemon` and the networks which the production and staging environment use.
 
-### Usage
+#### Usage
 
   Switch into the folder and start the execution with
 
@@ -133,7 +141,7 @@ This allows us to gather metrics even during deployments.
    docker-compose up -d --build
   ```
 
-## ISE
+### ISE
 
 This is the step in the deployment where differentiate between the staging and release deployment. The steps made before fall in the category of common infrastructure.
 
@@ -142,7 +150,7 @@ The `backend`, `frontend`, `database-tooling` and the `data-crawler`.
 They are all included in the same `docker-compose-file`.
 
 
-### Folder structure
+#### Folder structure
 
 - **docker-compose.yml**:
   Compose file describing the different services of the ise project.
@@ -153,7 +161,7 @@ They are all included in the same `docker-compose-file`.
 - **.env**:
   The file containing all configuration parameters for the application. There is a sperate one for staging and for the release deployment.
 
-### Usage
+#### Usage
 
 1. Build the images for the frontend and backend services on a dev machine or CI-service and push them to the new registry
 

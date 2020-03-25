@@ -8,11 +8,11 @@ services:
       - "443:443"
     volumes:
       - ./prod/nginx:/etc/nginx/conf.d
-      - /home/isekiel/certbot/conf:/etc/letsencrypt
-      - /home/isekiel/certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
 
   certbot:
     image: certbot/certbot
     volumes:
-      - /home/isekiel/certbot/conf:/etc/letsencrypt
-      - /home/isekiel/certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
